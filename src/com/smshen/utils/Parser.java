@@ -14,6 +14,78 @@ public class Parser {
     private PDM pdm = new PDM();
     private final static Logger LOGGER = Logger.getLogger(Parser.class.getName());
 
+    /**
+     * cdm解析
+     */
+
+    /**
+     * 解析cdm格式文件
+     * @param cdmFileName cdm文件
+     * @return
+     * @throws Exception
+     */
+    public PDM cdmParse(String cdmFileName) throws Exception {
+        SAXReader reader = new SAXReader();
+        Document doc = reader.read(cdmFileName);
+
+        Node model = doc.selectSingleNode("//c:Children/o:Model");
+
+        pdm.setId(((Element) model).attributeValue("Id"));
+        pdm.setName(model.selectSingleNode("a:Name").getText());
+        pdm.setCode(model.selectSingleNode("a:Code").getText());
+
+        Node dbms = model.selectSingleNode("//o:Shortcut");
+        pdm.setDBMSCode(dbms.selectSingleNode("a:Code").getText());
+        pdm.setDBMSName(dbms.selectSingleNode("a:Name").getText());
+
+        LOGGER.info("解析CDM为:" + pdm.getCode() + "(" + pdm.getName() + ")  DBMS为:" + pdm.getDBMSCode() + "(" + pdm.getDBMSName() + ")");
+
+        pdm.setUsers((ArrayList)cdmUserParser(model));
+        pdm.setTables((ArrayList)cdmTableParser(model));
+        pdm.setPhysicalDiagrams((ArrayList)cdmPhysicalDiagramParser(model));
+        pdm.setReferences((ArrayList)cdmReferenceParser(model));
+
+        return pdm;
+    }
+
+    /**
+     * 解析cdm用户
+     * @param node
+     * @return
+     */
+    private List<PDMUser> cdmUserParser(Node node) {
+        List<PDMUser> pdmUserList = new ArrayList<PDMUser>();
+
+        return pdmUserList;
+    }
+
+    /**
+     * 解析cdm表
+     * @param node
+     * @return
+     */
+    private List<PDMTable> cdmTableParser(Node node) {
+        List<PDMTable> pdmTableList = new ArrayList<PDMTable>();
+
+        return pdmTableList;
+    }
+
+    private List<PDMPhysicalDiagram> cdmPhysicalDiagramParser(Node node) {
+        List<PDMPhysicalDiagram> pdmPhysicalDiagramList = new ArrayList<PDMPhysicalDiagram>();
+
+        return pdmPhysicalDiagramList;
+    }
+
+    private List<PDMReference> cdmReferenceParser(Node node) {
+        List<PDMReference> pdmReferenceList = new ArrayList<PDMReference>();
+
+        return pdmReferenceList;
+    }
+
+    /**
+     * pdm解析
+     */
+
     public PDM pdmParser(String pdmFileName) throws Exception {
         SAXReader reader = new SAXReader();
         Document doc = reader.read(pdmFileName);
