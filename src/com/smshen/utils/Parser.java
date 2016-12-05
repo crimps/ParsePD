@@ -13,6 +13,10 @@ public class Parser {
 
     private PDM pdm = new PDM();
     private final static Logger LOGGER = Logger.getLogger(Parser.class.getName());
+    //cdm元素
+    private final static String CDM_MODE = "//c:Children/o:Model";
+    private final static String CDM_TABLES = "c:Entities";
+    private final static String CDM_TABLE = "o:Entity";
 
     // **** cdm解析 ****
 
@@ -26,7 +30,7 @@ public class Parser {
         SAXReader reader = new SAXReader();
         Document doc = reader.read(cdmFileName);
 
-        Node model = doc.selectSingleNode("//c:Children/o:Model");
+        Node model = doc.selectSingleNode(CDM_MODE);
 
         pdm.setId(((Element) model).attributeValue("Id"));
         pdm.setName(model.selectSingleNode("a:Name").getText());
