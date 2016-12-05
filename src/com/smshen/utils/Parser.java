@@ -14,9 +14,7 @@ public class Parser {
     private PDM pdm = new PDM();
     private final static Logger LOGGER = Logger.getLogger(Parser.class.getName());
 
-    /**
-     * cdm解析
-     */
+    // **** cdm解析 ****
 
     /**
      * 解析cdm格式文件
