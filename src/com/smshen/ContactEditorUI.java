@@ -10,6 +10,7 @@ import com.smshen.utils.PDM;
 import com.smshen.utils.PDMColumn;
 import com.smshen.utils.PDMTable;
 import com.smshen.utils.Parser;
+
 import java.awt.Frame;
 import java.io.File;
 import java.util.ArrayList;
@@ -22,10 +23,12 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 
 /**
- *
  * @author ice
  */
 public class ContactEditorUI extends javax.swing.JFrame {
+
+    private final static String FILE_STUFFIX_CDM = ".cdm";
+    private final static String FILE_STUFFIX_PDM = ".pdm";
 
     /**
      * Creates new form ContactEditorUI
@@ -59,12 +62,12 @@ public class ContactEditorUI extends javax.swing.JFrame {
         jScrollPane2.setViewportView(jTree1);
 
         jTable1.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
+                new Object[][]{
 
-            },
-            new String [] {
+                },
+                new String[]{
 
-            }
+                }
         ));
         jScrollPane3.setViewportView(jTable1);
 
@@ -98,18 +101,18 @@ public class ContactEditorUI extends javax.swing.JFrame {
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 204, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 504, Short.MAX_VALUE)
-                .addContainerGap())
+                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(layout.createSequentialGroup()
+                                .addContainerGap()
+                                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 204, Short.MAX_VALUE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 504, Short.MAX_VALUE)
+                                .addContainerGap())
         );
         layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane2)
-            .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 530, Short.MAX_VALUE)
+                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addComponent(jScrollPane2)
+                        .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 530, Short.MAX_VALUE)
         );
 
         pack();
@@ -119,54 +122,61 @@ public class ContactEditorUI extends javax.swing.JFrame {
         // TODO add your handling code here:
         JFileChooser jfc = new JFileChooser();
         jfc.setFileSelectionMode(JFileChooser.FILES_ONLY);
-        
+
         File file = null;
-        if (JFileChooser.APPROVE_OPTION== jfc.showOpenDialog(this)) {
+        if (JFileChooser.APPROVE_OPTION == jfc.showOpenDialog(this)) {
             file = jfc.getSelectedFile();
             try {
-                    PDM p = new Parser().pdmParser(file.getPath());
-                    DefaultMutableTreeNode top = new DefaultMutableTreeNode("表");
-                    
-                    
-                    for (PDMTable t : p.getTables()) {
-                            System.out.println("table-->" + t.getName() + ", code-->" + t.getCode());
-                            DefaultMutableTreeNode child = new DefaultMutableTreeNode(t);
-                            top.add(child);
+                PDM p = new PDM();
+                if (file.getName().endsWith(FILE_STUFFIX_PDM)) {
+                    p = new Parser().pdmParser(file.getPath());
+                }
+                if (file.getName().endsWith(FILE_STUFFIX_CDM)) {
+                    p = new Parser().cdmParse(file.getPath());
+                }
+                DefaultMutableTreeNode top = new DefaultMutableTreeNode("表");
+
+
+                for (PDMTable t : p.getTables()) {
+                    System.out.println("table-->" + t.getName() + ", code-->" + t.getCode());
+                    DefaultMutableTreeNode child = new DefaultMutableTreeNode(t);
+                    top.add(child);
+                }
+                jTree1.setModel(new DefaultTreeModel(top));
+                jTree1.addTreeSelectionListener(new TreeSelectionListener() {
+                    @Override
+                    public void valueChanged(TreeSelectionEvent e) {
+                        DefaultMutableTreeNode node = (DefaultMutableTreeNode) jTree1
+                                .getLastSelectedPathComponent();
+
+                        if (node == null)
+                            return;
+
+                        Object object = node.getUserObject();
+                        if (node.isLeaf()) {
+                            PDMTable pdmt = (PDMTable) object;
+                            ArrayList<PDMColumn> cols = pdmt.getColumns();
+                            String[] columnNames = {"名称", "CODE", "数据类型", "备注"};
+                            cols.trimToSize();
+                            Object[][] data = new Object[cols.size()][columnNames.length];
+
+                            int i = 0;
+                            for (PDMColumn col : cols) {
+                                data[i][0] = col.getName();
+                                data[i][1] = col.getCode();
+                                data[i][2] = col.getDataType();
+                                data[i][3] = col.getComment();
+                                i++;
+                            }
+                            int s = Frame.MAXIMIZED_BOTH;
+                            TableModel dataMode = new DefaultTableModel(data, columnNames);
+                            jTable1.setModel(dataMode);
+                        }
                     }
-                    jTree1.setModel(new DefaultTreeModel(top));
-                    jTree1.addTreeSelectionListener(new TreeSelectionListener() {
-                        @Override
-                        public void valueChanged(TreeSelectionEvent e) {
-                            DefaultMutableTreeNode node = (DefaultMutableTreeNode) jTree1
-                                    .getLastSelectedPathComponent();
-
-                            if (node == null)
-                                return;
-
-                            Object object = node.getUserObject();
-                            if (node.isLeaf()) {
-                                PDMTable pdmt = (PDMTable) object;
-                                ArrayList<PDMColumn> cols = pdmt.getColumns();
-                                String[] columnNames = {"名称", "CODE", "数据类型", "备注"};
-                                cols.trimToSize();
-                                Object[][] data = new Object[cols.size()][columnNames.length];
-                                
-                                int i = 0;
-                                for (PDMColumn col : cols) {
-                                    data[i][0] = col.getName();
-                                    data[i][1] = col.getCode();
-                                    data[i][2] = col.getDataType();
-                                    data[i][3] = col.getComment();
-                                    i++;
-                                }                             
-                               int s =  Frame.MAXIMIZED_BOTH;
-                                TableModel dataMode = new DefaultTableModel(data, columnNames);
-                                jTable1.setModel(dataMode);
-                            }}
-                    });
+                });
             } catch (Exception e) {
-                    e.printStackTrace();
-            }    
+                e.printStackTrace();
+            }
         }
     }//GEN-LAST:event_jMenuItem1ActionPerformed
 
