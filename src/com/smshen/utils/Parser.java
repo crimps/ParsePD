@@ -79,7 +79,12 @@ public class Parser {
             pdmTable.setId(((Element)tableNode).attributeValue("Id"));
             pdmTable.setName(tableNode.selectSingleNode("a:Name").getText());
             pdmTable.setCode(tableNode.selectSingleNode("a:Code").getText());
+            //Columns
             pdmTable.setColumns(cdmColumnParser(tableNode, pdmColumnMap));
+            //Key
+            //PrimaryKey
+            //Indexes
+            //User
             pdmTableList.add(pdmTable);
         }
         return pdmTableList;
