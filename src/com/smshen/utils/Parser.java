@@ -1,7 +1,9 @@
 package com.smshen.utils;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.dom4j.Document;
@@ -17,6 +19,8 @@ public class Parser {
     private final static String CDM_MODE = "//c:Children/o:Model";
     private final static String CDM_TABLES = "c:Entities";
     private final static String CDM_TABLE = "o:Entity";
+    private final static String CDM_COLUMNS = "c:DataItems";
+    private final static String CDM_COLUMN = "o:DataItem";
 
     // **** cdm解析 ****
 
@@ -68,8 +72,57 @@ public class Parser {
      */
     private List<PDMTable> cdmTableParser(Node node) {
         List<PDMTable> pdmTableList = new ArrayList<PDMTable>();
-
+        Map<String, PDMColumn> pdmColumnMap = getColumns(node);
+        List<Node> tableNodeList = node.selectSingleNode(CDM_TABLES).selectNodes(CDM_TABLE);
+        for (Node tableNode : tableNodeList) {
+            PDMTable pdmTable = new PDMTable();
+            pdmTable.setId(((Element)tableNode).attributeValue("Id"));
+            pdmTable.setName(tableNode.selectSingleNode("a:Name").getText());
+            pdmTable.setCode(tableNode.selectSingleNode("a:Code").getText());
+            pdmTable.setColumns(cdmColumnParser(tableNode, pdmColumnMap));
+            pdmTableList.add(pdmTable);
+        }
         return pdmTableList;
+    }
+
+    /**
+     * 解析cdm列
+     * @param node
+     * @param allColumns
+     * @return
+     */
+    private ArrayList<PDMColumn> cdmColumnParser(Node node, Map<String, PDMColumn> allColumns) {
+        ArrayList<PDMColumn> pdmColumnList = new ArrayList<>();
+        List<Node> columnNodeList = node.selectSingleNode("c:Attributes").selectNodes("o:EntityAttribute");
+        for (Node columnNode : columnNodeList) {
+            String columnId = ((Element) columnNode.selectSingleNode("c:DataItem").selectSingleNode("o:DataItem")).attributeValue("Ref");
+            PDMColumn column = allColumns.get(columnId);
+            if (null != column) {
+                pdmColumnList.add(column);
+            }
+        }
+        return pdmColumnList;
+    }
+
+    /**
+     * 获取cdm所有列信息
+     * @param node
+     * @return
+     */
+    private Map<String, PDMColumn> getColumns(Node node) {
+        Map<String, PDMColumn> pdmColumnMap = new HashMap<>();
+        List<Node> columnNotes = node.selectSingleNode(CDM_COLUMNS).selectNodes(CDM_COLUMN);
+        for (Node column : columnNotes) {
+            PDMColumn pdmColumn = new PDMColumn();
+            pdmColumn.setId(((Element)column).attributeValue("Id"));
+            pdmColumn.setName(node.selectSingleNode("a:Name").getText());
+            pdmColumn.setCode(node.selectSingleNode("a:Code").getText());
+            pdmColumn.setDataType(node.selectSingleNode("a:DataType").getText());
+            pdmColumn.setLength(Integer.valueOf(node.selectSingleNode("a:Length").getText()));
+            pdmColumn.setComment(node.selectSingleNode("a:Comment").getText());
+            pdmColumnMap.put(pdmColumn.getId(), pdmColumn);
+        }
+        return pdmColumnMap;
     }
 
     private List<PDMPhysicalDiagram> cdmPhysicalDiagramParser(Node node) {
