@@ -1,10 +1,8 @@
 package com.smshen.utils;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.dom4j.Document;
 import org.dom4j.Element;
@@ -70,8 +68,8 @@ public class Parser {
      * @param node
      * @return
      */
-    private List<PDMTable> cdmTableParser(Node node) {
-        List<PDMTable> pdmTableList = new ArrayList<PDMTable>();
+    private List<PDMTable> cdmTableParser(Node node){
+        Map<String, PDMTable> tableMap = new TreeMap<>();
         Map<String, PDMColumn> pdmColumnMap = getColumns(node);
         List<Node> tableNodeList = node.selectSingleNode(CDM_TABLES).selectNodes(CDM_TABLE);
         for (Node tableNode : tableNodeList) {
@@ -80,14 +78,49 @@ public class Parser {
             pdmTable.setName(tableNode.selectSingleNode("a:Name").getText());
             pdmTable.setCode(tableNode.selectSingleNode("a:Code").getText());
             //Columns
-            pdmTable.setColumns(cdmColumnParser(tableNode, pdmColumnMap));
+            Map<String, PDMColumn> entityAttributeMap = cdmColumnParser(tableNode, pdmColumnMap);
+            pdmTable.setColumns(new ArrayList<PDMColumn>(cdmColumnParser(tableNode, pdmColumnMap).values()));
             //Key
+            Node identifiersNode = tableNode.selectSingleNode("c:Identifiers");
+            if (null != identifiersNode) {
+                List<Node> keyNodeList = identifiersNode.selectNodes("o:Identifier");
+                for (Node keyNode : keyNodeList) {
+                    PDMKey pdmKey = new PDMKey();
+                    pdmKey.setId(((Element)keyNode).attributeValue("Id"));
+                    pdmKey.setName(keyNode.selectSingleNode("a:Name").getText());
+                    pdmKey.setCode(keyNode.selectSingleNode("a:Code").getText());
+                    Node attributesNode = keyNode.selectSingleNode("c:Identifier.Attributes");
+                    if (null != attributesNode) {
+                        List<Node> keyColumnNodeList = attributesNode.selectNodes("o:EntityAttribute");
+                        for (Node keyColumnNode : keyColumnNodeList) {
+                            String entityAttribute = ((Element)keyColumnNode).attributeValue("Ref");
+                            if (StringUtils.isNotBlank(entityAttribute)) {
+                                pdmKey.addColumn(entityAttributeMap.get(entityAttribute));
+                            }
+                        }
+                        pdmTable.addKey(pdmKey);
+                    }
+                }
+            }
             //PrimaryKey
+            Node primaryIdentifierNode = tableNode.selectSingleNode("c:PrimaryIdentifier");
+            if (null != primaryIdentifierNode) {
+                String identifierId = ((Element) primaryIdentifierNode.selectSingleNode("o:Identifier")).attributeValue("Ref");
+                if (StringUtils.isNotBlank(identifierId)) {
+                    try {
+                        pdmTable.setPrimaryKey(pdmTable.getPDMKey(identifierId));
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
             //Indexes
+
             //User
-            pdmTableList.add(pdmTable);
+
+            tableMap.put(pdmTable.getName(), pdmTable);
         }
-        return pdmTableList;
+        return new ArrayList<>(tableMap.values());
     }
 
     /**
@@ -96,17 +129,18 @@ public class Parser {
      * @param allColumns
      * @return
      */
-    private ArrayList<PDMColumn> cdmColumnParser(Node node, Map<String, PDMColumn> allColumns) {
-        ArrayList<PDMColumn> pdmColumnList = new ArrayList<>();
+    private Map<String, PDMColumn> cdmColumnParser(Node node, Map<String, PDMColumn> allColumns) {
+        Map<String, PDMColumn> pdmColumnMap = new HashMap<>();
         List<Node> columnNodeList = node.selectSingleNode("c:Attributes").selectNodes("o:EntityAttribute");
         for (Node columnNode : columnNodeList) {
+            String entityAttributeId = ((Element) columnNode).attributeValue("Id");
             String columnId = ((Element) columnNode.selectSingleNode("c:DataItem").selectSingleNode("o:DataItem")).attributeValue("Ref");
             PDMColumn column = allColumns.get(columnId);
-            if (null != column) {
-                pdmColumnList.add(column);
+            if (null != column && StringUtils.isNotBlank(entityAttributeId)) {
+                pdmColumnMap.put(entityAttributeId, column);
             }
         }
-        return pdmColumnList;
+        return pdmColumnMap;
     }
 
     /**
@@ -133,6 +167,7 @@ public class Parser {
         }
         return pdmColumnMap;
     }
+
 
     private List<PDMPhysicalDiagram> cdmPhysicalDiagramParser(Node node) {
         List<PDMPhysicalDiagram> pdmPhysicalDiagramList = new ArrayList<PDMPhysicalDiagram>();

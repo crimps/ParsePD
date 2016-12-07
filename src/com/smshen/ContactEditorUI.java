@@ -14,6 +14,7 @@ import com.smshen.utils.Parser;
 import java.awt.Frame;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
 import javax.swing.JFileChooser;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
@@ -155,17 +156,29 @@ public class ContactEditorUI extends javax.swing.JFrame {
                         Object object = node.getUserObject();
                         if (node.isLeaf()) {
                             PDMTable pdmt = (PDMTable) object;
+                            List<String> keyColumnIdList = new ArrayList<String>();
+                            if (null != pdmt.getPrimaryKey() && null != pdmt.getPrimaryKey().getColumns()) {
+                                List<PDMColumn> primaryKeyList = pdmt.getPrimaryKey().getColumns();
+                                for (PDMColumn keyColumn : primaryKeyList) {
+                                    keyColumnIdList.add(keyColumn.getId());
+                                }
+                            }
                             ArrayList<PDMColumn> cols = pdmt.getColumns();
-                            String[] columnNames = {"名称", "CODE", "数据类型", "备注"};
+                            String[] columnNames = {"是否主键", "名称", "CODE", "数据类型", "备注"};
                             cols.trimToSize();
                             Object[][] data = new Object[cols.size()][columnNames.length];
 
                             int i = 0;
                             for (PDMColumn col : cols) {
-                                data[i][0] = col.getName();
-                                data[i][1] = col.getCode();
-                                data[i][2] = col.getDataType();
-                                data[i][3] = col.getComment();
+                                if (keyColumnIdList.contains(col.getId())) {
+                                    data[i][0] = "     ✓";
+                                } else {
+                                    data[i][0] = "";
+                                }
+                                data[i][1] = col.getName();
+                                data[i][2] = col.getCode();
+                                data[i][3] = col.getDataType();
+                                data[i][4] = col.getComment();
                                 i++;
                             }
                             int s = Frame.MAXIMIZED_BOTH;
