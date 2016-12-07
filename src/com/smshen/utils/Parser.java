@@ -120,11 +120,15 @@ public class Parser {
         for (Node column : columnNotes) {
             PDMColumn pdmColumn = new PDMColumn();
             pdmColumn.setId(((Element)column).attributeValue("Id"));
-            pdmColumn.setName(node.selectSingleNode("a:Name").getText());
-            pdmColumn.setCode(node.selectSingleNode("a:Code").getText());
-            pdmColumn.setDataType(node.selectSingleNode("a:DataType").getText());
-            pdmColumn.setLength(Integer.valueOf(node.selectSingleNode("a:Length").getText()));
-            pdmColumn.setComment(node.selectSingleNode("a:Comment").getText());
+            pdmColumn.setName(column.selectSingleNode("a:Name").getText());
+            pdmColumn.setCode(column.selectSingleNode("a:Code").getText());
+            pdmColumn.setDataType(column.selectSingleNode("a:DataType").getText());
+            if (null != column.selectSingleNode("a:Length")) {
+                pdmColumn.setLength(Integer.valueOf(column.selectSingleNode("a:Length").getText()));
+            }
+            if (null != column.selectSingleNode("a:Comment")) {
+                pdmColumn.setComment(column.selectSingleNode("a:Comment").getText());
+            }
             pdmColumnMap.put(pdmColumn.getId(), pdmColumn);
         }
         return pdmColumnMap;
