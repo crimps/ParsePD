@@ -25,6 +25,7 @@ import javax.swing.tree.DefaultTreeModel;
 
 /**
  * @author ice
+ * @update 2016/12/07 crimps 添加处理cdm格式功能
  */
 public class ContactEditorUI extends javax.swing.JFrame {
 

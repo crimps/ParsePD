@@ -9,6 +9,10 @@ import org.dom4j.Element;
 import org.dom4j.Node;
 import org.dom4j.io.SAXReader;
 
+/**
+ * @update 2016/12/07 crimps 添加处理cdm格式功能
+ */
+
 public class Parser {
 
     private PDM pdm = new PDM();
