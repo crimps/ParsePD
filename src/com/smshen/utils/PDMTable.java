@@ -12,6 +12,12 @@ public class PDMTable {
 	private PDMKey primaryKey;
 	private ArrayList<PDMIndex> indexs = new ArrayList<PDMIndex>();
 
+	//位置信息
+	private double xLeft; //左上角横坐标
+	private double yLeft; //左上角纵坐标
+	private double xRight; //右下角横坐标
+	private double yRight; //右下角纵坐标
+
 	public String getId() {
 		return id;
 	}
