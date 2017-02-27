@@ -1,3 +1,4 @@
 .idea
 ParsePDM.iml
 build
+out/*
