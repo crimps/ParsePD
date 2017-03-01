@@ -1,4 +1,4 @@
 .idea
 ParsePDM.iml
 build
-out/*
+out/production
